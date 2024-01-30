@@ -9,7 +9,17 @@ class Game:
         self.player = Player('Player')
         self.dealer = Dealer()
         self.card_values = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11}
+   
+    def calculate_hand_value(self, hand):
+        hand_value = sum(self.card_values[card.rank] for card in hand)
+        num_aces = sum(1 for card in hand if card.rank == 'A')
 
+        while hand_value > 21 and num_aces:
+            hand_value -= 10
+            num_aces -= 1
+
+        return hand_value
+    
     def start_round(self):
             card_values = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11}
             self.player.clear_hand()
@@ -44,6 +54,29 @@ class Game:
         # Show the dealer's face-up card
         print("Dealer's face-up card:")
         print(self.dealer.hand[1])
+
+        # Check if the player's hand can be split
+        if len(self.player.hand) == 2 and self.player.hand[0].rank == self.player.hand[1].rank:
+            split_option = input("Would you like to split your hand? (y/n): ").lower()
+            if split_option == 'y':
+                # Split the hand
+                hand1, hand2 = self.player.split_hand(self.deck)
+                
+                # Play for each hand independently
+                print("First Hand:")
+                for card in hand1:
+                    print(card)
+                self.play_hand(hand1)
+                
+                print("Second Hand:")
+                for card in hand2:
+                    print(card)
+                self.play_hand(hand2)
+                return
+            else:
+                self.play_hand(self.player.hand)
+        else:
+            pass
 
         # Loop for the player's turn
         while True:
@@ -122,3 +155,16 @@ class Game:
             print(f"Player's Balance: {self.player.balance}")
             if input("Play again? (y/n): ").lower() != 'y':
                 break
+
+    def play_hand(self, hand):
+        while True:
+            action = input("Enter 'hit' or 'stand': ").lower()
+            if action == 'hit':
+                hand.append(self.deck.deal_card())
+                print(hand[-1])
+                print(f"Hand Value: {self.calculate_hand_value(hand)}")
+                if self.calculate_hand_value(hand) > 21:
+                    print("Bust! You lose.")
+                    return 'bust'
+            elif action == 'stand':
+                return 'stand'
