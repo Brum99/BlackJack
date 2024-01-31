@@ -21,58 +21,54 @@ class Game:
         return hand_value
     
     def start_round(self):
-            card_values = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11}
-            self.player.clear_hand()
-            self.dealer.clear_hand()
+        self.player.clear_hand()  
+        self.dealer.clear_hand()
+        self.player.reset_bet()
 
-            # Reset player's bet to 0
-            self.player.bet = 0
-
-            # Place initial bet
+        initial_bet = int(input(f"Place your bet (current balance: {self.player.balance}): "))
+        while initial_bet <= 0 or initial_bet > self.player.balance:
+            print("Invalid bet amount. Please enter a valid bet.")
             initial_bet = int(input(f"Place your bet (current balance: {self.player.balance}): "))
-            while initial_bet <= 0 or initial_bet > self.player.balance:
-                print("Invalid bet amount. Please enter a valid bet.")
-                initial_bet = int(input(f"Place your bet (current balance: {self.player.balance}): "))
 
-            self.player.place_bet(initial_bet)
+        self.player.place_bet(initial_bet)
+        # Deal initial cards
+        self.player.receive_card(self.deck.deal_card())
+        self.dealer.receive_card(self.deck.deal_card())
+        self.player.receive_card(self.deck.deal_card())
+        self.dealer.receive_card(self.deck.deal_card())
 
-            # Deal initial cards
-            self.player.receive_card(self.deck.deal_card())
-            self.dealer.receive_card(self.deck.deal_card())
-            self.player.receive_card(self.deck.deal_card())
-            self.dealer.receive_card(self.deck.deal_card())
-
-            # Show player's hand
-            print("Player's Hand:")
-            for card in self.player.hand:
-                print(card)
-            print(f"Player's Hand Value: {self.player.calculate_hand_value(card_values)}")
-
-
+        # Show player's hand
+        print("Player's Hand:")
+        for card in self.player.hand:
+            print(card)
+        print(f"Player's Hand Value: {self.calculate_hand_value(self.player.hand)}")
 
     def player_turn(self):
         # Show the dealer's face-up card
         print("Dealer's face-up card:")
-        print(self.dealer.hand[1])
+        print(self.dealer.hand[0])  
 
         # Check if the player's hand can be split
         if len(self.player.hand) == 2 and self.player.hand[0].rank == self.player.hand[1].rank:
             split_option = input("Would you like to split your hand? (y/n): ").lower()
             if split_option == 'y':
                 # Split the hand
-                hand1, hand2 = self.player.split_hand(self.deck)
-                
-                # Play for each hand independently
-                print("First Hand:")
-                for card in hand1:
-                    print(card)
-                self.play_hand(hand1)
-                
-                print("Second Hand:")
-                for card in hand2:
-                    print(card)
-                self.play_hand(hand2)
-                return
+                if self.player.split_hand(self.deck):  # Provide the deck argument
+                    # Player places additional bet for the second hand
+                    additional_bet = int(input(f"Place additional bet for split hand (current balance: {self.player.balance}): "))
+                    while additional_bet <= 0 or additional_bet > self.player.balance:
+                        print("Invalid bet amount. Please enter a valid bet.")
+                        additional_bet = int(input(f"Place additional bet for split hand (current balance: {self.player.balance}): "))
+                    self.player.place_split_bet(additional_bet)
+
+                    # Deal additional card for each hand
+                    self.player.receive_card(self.deck.deal_card(), hand=0)
+                    self.player.receive_card(self.deck.deal_card(), hand=1)
+
+                    # Play each hand independently
+                    self.play_hand(self.player.hands[0])
+                    self.play_hand(self.player.hands[1])
+                    return
             else:
                 self.play_hand(self.player.hand)
         else:
@@ -84,8 +80,8 @@ class Game:
             if action == 'hit':
                 self.player.receive_card(self.deck.deal_card())
                 print(self.player.hand[-1])
-                print(f"Player's Hand Value: {self.player.calculate_hand_value(self.card_values)}")
-                if self.player.calculate_hand_value(self.card_values) > 21:
+                print(f"Player's Hand Value: {self.calculate_hand_value(self.player.hand)}")
+                if self.calculate_hand_value(self.player.hand) > 21:
                     print("Bust! You lose.")
                     self.player.balance -= self.player.bet
                     break
@@ -101,11 +97,8 @@ class Game:
                 print("Player's Hand after doubling down:")
                 for card in self.player.hand:
                     print(card)
-                print(f"Player's Hand Value: {self.player.calculate_hand_value(self.card_values)}")
+                print(f"Player's Hand Value: {self.calculate_hand_value(self.player.hand)}")
                 break
-
-
-
 
     def dealer_turn(self):
         print("Dealer's Turn:")
@@ -153,7 +146,7 @@ class Game:
                 self.dealer_turn()
                 self.determine_winner()
             print(f"Player's Balance: {self.player.balance}")
-            if input("Play again? (y/n): ").lower() != 'y':
+            if input("Play again? Game Class (y/n): ").lower() != 'y':
                 break
 
     def play_hand(self, hand):
@@ -165,6 +158,8 @@ class Game:
                 print(f"Hand Value: {self.calculate_hand_value(hand)}")
                 if self.calculate_hand_value(hand) > 21:
                     print("Bust! You lose.")
-                    return 'bust'
+                    return 'lose'
             elif action == 'stand':
                 return 'stand'
+            
+
