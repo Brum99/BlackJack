@@ -10,9 +10,10 @@ class Deck:
     def generate_deck(self):
         card_values = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11}
         suites = ['♠', '♣', '♦', '♥']
-        deck = [Card(rank, suit) for _ in range(self.num_decks) for rank in card_values for suit in suites]
+        # Generate a deck with only one rank of cards (let's say '2') and one suite
+        deck = [Card('2', suit) for _ in range(self.num_decks) for suit in suites]
         return deck
-
+    
     def shuffle(self):
         random.shuffle(self.cards)
 
