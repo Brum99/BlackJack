@@ -18,6 +18,24 @@ def get_font(size):
 def play_game():
     play()
 
+def draw_card(screen, card_name, position):
+    card_x, card_y = card_positions[card_name]
+    card_surface = card_sheet.subsurface(pygame.Rect(card_x, card_y, card_width, card_height))
+    screen.blit(card_surface, position)
+
+# Load the card sprite sheet
+card_sheet = pygame.image.load("assets/cards.png").convert_alpha()
+
+# Define the dimensions of each card on the sheet
+card_width = 69
+card_height = 98
+
+# Create a dictionary mapping card names to their positions on the sheet
+card_positions = {
+    "ace_of_spades": (203, 488),
+    "2_of_spades": (200, 0),
+    # Add more card positions as needed
+}
 
 def play():
     while True:
@@ -28,11 +46,11 @@ def play():
                 sys.exit()
 
         # Clear the screen
-        SCREEN.fill("white")
+        SCREEN.fill("Tan")
 
         # Draw player cards
-        pygame.draw.rect(SCREEN, "Black", (50, 400, 100, 150))  # Example player card
-        pygame.draw.rect(SCREEN, "Black", (200, 400, 100, 150))  # Example player card
+        draw_card(SCREEN, "ace_of_spades", (50, 400))
+        draw_card(SCREEN, "2_of_spades", (200, 400)) # Example player card
 
         # Draw dealer cards
         pygame.draw.rect(SCREEN, "Black", (50, 200, 100, 150))  # Example dealer card
