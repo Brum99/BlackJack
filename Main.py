@@ -172,8 +172,13 @@ def deal_initial_cards():
 def dealer_hit():
     global dealer_hand
 
+    for i, card in enumerate(dealer_hand):
+        draw_card(SCREEN, card, (50 + i * 100, 300))
+
     # Calculate the current value of the dealer's hand
     dealer_value = calculate_hand_value(dealer_hand)
+    pygame.display.update()
+    pygame.time.delay(500)
 
     # Continue hitting until the value is 17 or above, or bust
     while dealer_value < 17:
@@ -183,18 +188,20 @@ def dealer_hit():
         dealer_value = calculate_hand_value(dealer_hand)
 
         # Draw the card and update the display
-        SCREEN.fill("Tan")  # Clear the screen
         for i, card in enumerate(dealer_hand):
-            if i == 0:
-                draw_card(SCREEN, "card_back", (50 + i * 100, 300))
-            else:
-                draw_card(SCREEN, card, (50 + i * 100, 300))
-        pygame.display.update()
+            draw_card(SCREEN, card, (50 + i * 100, 300))
 
-        # Add a delay
+        pygame.display.update()
         pygame.time.delay(500)  # Delay in milliseconds
 
+    if dealer_value > 21:
+        # Display a message indicating dealer bust
+        bust_message = get_font(30).render("Dealer Busts!", True, "Red")
+        SCREEN.blit(bust_message, (50, 150))
+        pygame.display.update()
+
     return dealer_value
+
 
 
 def calculate_hand_value(hand):
@@ -219,80 +226,146 @@ def calculate_hand_value(hand):
 
     return hand_value
 
+# Define bet amounts
+BET_AMOUNTS = [5, 10, 25]
+current_bet = 0  # Initialize current bet amount
 
-def play():
-    deal_initial_cards()  # Deal initial cards when the game starts
-    player_stood = False  # Flag to track if the player has chosen to stand
+# Create bet buttons
+bet_buttons = []
+for i, amount in enumerate(BET_AMOUNTS):
+    bet_button = Button(image=None, pos=(200 + i * 150, 600),  # Adjust positions as needed
+                        text_input=f"${amount}", font=get_font(30),
+                        base_color="Blue", hovering_color="LightBlue")
+    bet_buttons.append(bet_button)
 
-    while True:
-        # Event handling
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if not player_stood:  # Only allow actions if player hasn't stood
-                    mouse_pos = pygame.mouse.get_pos()
-                    # Check if Hit button is clicked
-                    if 600 < mouse_pos[0] < 700 and 400 < mouse_pos[1] < 450:
-                        # Deal another card to the player
-                        player_cards = random.sample(card_positions.keys(), 1)
-                        player_hand.extend(player_cards)
-                    # Check if Stand button is clicked
-                    elif 600 < mouse_pos[0] < 700 and 500 < mouse_pos[1] < 550:
-                        player_stood = True
+def draw_game_state(player_stood, player_busted, dealer_busted):
+    # Draw player title
+    player_surface = get_font(45).render("Player", True, "White")
+    SCREEN.blit(player_surface, (50, 450))
 
-        # Clear the screen
-        SCREEN.fill("Tan")
+    # Draw Dealer title
+    dealer_surface = get_font(45).render("Dealer", True, "White")
+    SCREEN.blit(dealer_surface, (50, 200))
 
-        # Draw player
-        player_surface = get_font(45).render("Player", True, "Black")
-        SCREEN.blit(player_surface, (50, 450))
-        # Draw Dealer
-        dealer_surface = get_font(45).render("Dealer", True, "Black")
-        SCREEN.blit(dealer_surface, (50, 200))
+    # Draw player cards
+    player_card_x = 50
+    for card in player_hand:
+        draw_card(SCREEN, card, (player_card_x, 550))
+        player_card_x += 100
 
-        # Draw player cards
-        player_card_x = 50
-        for card in player_hand:
-            draw_card(SCREEN, card, (player_card_x, 550))
-            player_card_x += 100
-
-        # Draw dealer's cards
-        for i, card in enumerate(dealer_hand):
+    # Draw dealer's cards
+    for i, card in enumerate(dealer_hand):
+        if player_stood or player_busted:  # If player stood or busted, reveal all dealer cards
+            draw_card(SCREEN, card, (50 + i * 100, 300))
+        else:  # Otherwise, only reveal the first card
             if i == 0:
                 draw_card(SCREEN, "card_back", (50 + i * 100, 300))
             else:
                 draw_card(SCREEN, card, (50 + i * 100, 300))
 
+    # Draw buttons with updated text
+    pygame.draw.rect(SCREEN, "DarkGreen", (600, 400, 100, 50))  # Hit button
+    hit_text_surface = get_font(30).render("Hit", True, "White")
+    SCREEN.blit(hit_text_surface, (620, 410))
 
-        # Player has stood, now dealer's turn
-        if player_stood:
+    pygame.draw.rect(SCREEN, "DarkGreen", (600, 500, 100, 50))  # Stand button
+    stand_text_surface = get_font(30).render("Stand", True, "White")
+    SCREEN.blit(stand_text_surface, (610, 510))
+
+    # Draw game information
+    text_surface = get_font(45).render("Player Balance: $1000", True, "White")
+    SCREEN.blit(text_surface, (50, 40))
+
+    # Display current bet amount
+    bet_text = get_font(30).render(f"Current Bet: ${current_bet}", True, "White")
+    SCREEN.blit(bet_text, (50, 100))
+
+
+def display_result_message(result_message,result_colour):
+    result_text = get_font(30).render(result_message, True, result_colour)
+    SCREEN.blit(result_text, (50, 150))
+    pygame.display.update()
+
+
+def play():
+    global current_bet, player_hand, dealer_hand  # Make necessary variables global
+
+    # Initialize player balance and bet amount
+    player_balance = 1000
+
+    while True:
+        deal_initial_cards()  # Deal initial cards when the game starts
+        player_stood = False  # Flag to track if the player has chosen to stand
+        player_busted = False  # Flag to track if the player has busted
+        dealer_busted = False  # Flag to track if the dealer has busted
+
+        # Clear the screen
+        SCREEN.fill("DarkGreen")
+
+        # Event handling and game logic
+        while not player_stood and not player_busted:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    # Handle player actions (hit or stand)
+                    if not player_stood and not player_busted:
+                        mouse_pos = pygame.mouse.get_pos()
+                        if 600 < mouse_pos[0] < 700 and 400 < mouse_pos[1] < 450:
+                            # Deal another card to the player
+                            player_cards = random.sample(card_positions.keys(), 1)
+                            player_hand.extend(player_cards)
+                            player_value = calculate_hand_value(player_hand)
+                            # Check if the player has busted
+                            if player_value > 21:
+                                player_busted = True
+                        elif 600 < mouse_pos[0] < 700 and 500 < mouse_pos[1] < 550:
+                            player_stood = True
+
+            # Draw the game state
+            draw_game_state(player_stood, player_busted, dealer_busted)
+            pygame.display.update()
+
+        # Dealer's turn
+        if not player_busted:
             dealer_value = dealer_hit()
+            if dealer_value > 21:
+                dealer_busted = True
 
-            # Draw dealer's hand after hitting
-            for i, card in enumerate(dealer_hand):
-                draw_card(SCREEN, card, (50 + i * 100, 300))
+            # Compare player and dealer hands if both haven't busted
+            if not player_busted and not dealer_busted:
+                player_value = calculate_hand_value(player_hand)
+                if player_value > dealer_value:
+                    result_message = "Player wins!"
+                    result_colour = "White"
+                elif player_value < dealer_value:
+                    result_message = "Dealer wins!"
+                    result_colour = "Red"
+                else:
+                    result_message = "Stand!"
+                    result_colour = "White"
+                # Display the result message
+                display_result_message(result_message, result_colour)
 
-        # Draw buttons with updated text
-        pygame.draw.rect(SCREEN, "Black", (600, 400, 100, 50))  # Hit button
-        hit_text_surface = get_font(30).render("Hit", True, "White")
-        SCREEN.blit(hit_text_surface, (620, 410))
+        # Delay between rounds
+        pygame.time.delay(1500)  # Adjust the delay time as needed
 
-        pygame.draw.rect(SCREEN, "Black", (600, 500, 100, 50))  # Stand button
-        stand_text_surface = get_font(30).render("Stand", True, "White")
-        SCREEN.blit(stand_text_surface, (610, 510))
-
-        # Draw game information
-        text_surface = get_font(45).render("Player Balance: $1000", True, "Black")
-        SCREEN.blit(text_surface, (50, 40))
-        text_surface = get_font(45).render("Bet Amount: $10", True, "Black")
-        SCREEN.blit(text_surface, (50, 85))
-
-        # Update the display
+        # Reset the game after the round is played out
+        reset_game()
         pygame.display.update()
 
+def reset_game():
+    # Reset player and dealer hands
+    player_hand.clear()
+    dealer_hand.clear()
 
+    # Reset relevant flags
+    player_stood = False
+    player_busted = False
+
+    # Update the display
+    pygame.display.update()
 
 def options():
     while True:
