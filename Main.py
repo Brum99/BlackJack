@@ -240,7 +240,7 @@ def calculate_hand_value(hand):
 #                         base_color="Blue", hovering_color="LightBlue")
 #     bet_buttons.append(bet_button)
 
-def draw_game_state(player_stood, player_busted):
+def draw_game_state(player_stood, player_busted, player_doubled):
     global player_balance
     global bet
     # Draw player title
@@ -267,8 +267,10 @@ def draw_game_state(player_stood, player_busted):
             else:
                 draw_card(SCREEN, card, (50 + i * 100, 300))
 
-
-
+    # Double down button
+    pygame.draw.rect(SCREEN, "DarkGreen", (600, 600, 100, 50))  # Double Down button
+    double_down_text_surface = get_font(30).render("Double Down", True, "White")
+    SCREEN.blit(double_down_text_surface, (600, 610))
     # Draw buttons with updated text
     pygame.draw.rect(SCREEN, "DarkGreen", (600, 400, 100, 50))  # Hit button
     hit_text_surface = get_font(30).render("Hit", True, "White")
@@ -304,7 +306,7 @@ def play(bet):
         player_stood = False  # Flag to track if the player has chosen to stand
         player_busted = False  # Flag to track if the player has busted
         dealer_busted = False  # Flag to track if the dealer has busted
-
+        player_doubled = False # Flag to trach if the player has doubled their hand
         # Clear the screen
         SCREEN.fill("DarkGreen")
 
@@ -317,20 +319,35 @@ def play(bet):
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     # Handle player actions (hit or stand)
                     if not player_stood and not player_busted:
-                        mouse_pos = pygame.mouse.get_pos()
-                        if 600 < mouse_pos[0] < 700 and 400 < mouse_pos[1] < 450:
-                            # Deal another card to the player
-                            player_cards = random.sample(card_positions.keys(), 1)
-                            player_hand.extend(player_cards)
-                            player_value = calculate_hand_value(player_hand)
-                            # Check if the player has busted
-                            if player_value > 21:
-                                player_busted = True
-                        elif 600 < mouse_pos[0] < 700 and 500 < mouse_pos[1] < 550:
-                            player_stood = True
+                            mouse_pos = pygame.mouse.get_pos()
+                            if 600 < mouse_pos[0] < 700 and 400 < mouse_pos[1] < 450:
+                                # Deal another card to the player
+                                player_cards = random.sample(card_positions.keys(), 1)
+                                player_hand.extend(player_cards)
+                                player_value = calculate_hand_value(player_hand)
+                                # Check if the player has busted
+                                if player_value > 21:
+                                    player_busted = True
+                            elif 600 < mouse_pos[0] < 700 and 500 < mouse_pos[1] < 550:
+                                player_stood = True
+                            elif 600 < mouse_pos[0] < 700 and 600 < mouse_pos[1] < 650:
+                                # Double down
+                                # player_balance -= bet
+                                player_cards = random.sample(card_positions.keys(), 1)
+                                player_hand.extend(player_cards)
+                                player_stood = True
+                                player_doubled = True
+                                # Display current bet amount
+                                bet_text = get_font(30).render(f"Current Bet: $" + str(bet), True, "DarkGreen")
+                                SCREEN.blit(bet_text, (50, 100))
+                                pygame.display.update()
+                                # bet_text = get_font(30).render(f"Current Bet: $" + str(bet*2), True, "White")
+                                # SCREEN.blit(bet_text, (50, 100))
+                                
+
 
             # Draw the game state
-            draw_game_state(player_stood, player_busted)
+            draw_game_state(player_stood, player_busted, player_doubled)
             pygame.display.update()
 
         # Dealer's turn
