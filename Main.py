@@ -154,7 +154,7 @@ player_hand = []
 dealer_hand = []
 player_balance = 0 
 game_over = False
-
+global bet
 def deal_initial_cards():
     # Clear the hands
     player_hand.clear()
@@ -171,7 +171,8 @@ def deal_initial_cards():
 
 def dealer_hit():
     global dealer_hand
-
+    global player_balance
+    global bet
     for i, card in enumerate(dealer_hand):
         draw_card(SCREEN, card, (50 + i * 100, 300))
 
@@ -198,6 +199,7 @@ def dealer_hit():
         # Display a message indicating dealer bust
         bust_message = get_font(30).render("Dealer Busts!", True, "Red")
         SCREEN.blit(bust_message, (50, 150))
+        player_balance += bet
         pygame.display.update()
 
     return dealer_value
@@ -226,19 +228,21 @@ def calculate_hand_value(hand):
 
     return hand_value
 
-# Define bet amounts
-BET_AMOUNTS = [5, 10, 25]
-current_bet = 0  # Initialize current bet amount
+# # Define bet amounts
+# BET_AMOUNTS = [5, 10, 25]
+# current_bet = 0  # Initialize current bet amount
 
-# Create bet buttons
-bet_buttons = []
-for i, amount in enumerate(BET_AMOUNTS):
-    bet_button = Button(image=None, pos=(200 + i * 150, 600),  # Adjust positions as needed
-                        text_input=f"${amount}", font=get_font(30),
-                        base_color="Blue", hovering_color="LightBlue")
-    bet_buttons.append(bet_button)
+# # Create bet buttons
+# bet_buttons = []
+# for i, amount in enumerate(BET_AMOUNTS):
+#     bet_button = Button(image=None, pos=(200 + i * 150, 600),  # Adjust positions as needed
+#                         text_input=f"${amount}", font=get_font(30),
+#                         base_color="Blue", hovering_color="LightBlue")
+#     bet_buttons.append(bet_button)
 
-def draw_game_state(player_stood, player_busted, dealer_busted):
+def draw_game_state(player_stood, player_busted):
+    global player_balance
+    global bet
     # Draw player title
     player_surface = get_font(45).render("Player", True, "White")
     SCREEN.blit(player_surface, (50, 450))
@@ -263,6 +267,8 @@ def draw_game_state(player_stood, player_busted, dealer_busted):
             else:
                 draw_card(SCREEN, card, (50 + i * 100, 300))
 
+
+
     # Draw buttons with updated text
     pygame.draw.rect(SCREEN, "DarkGreen", (600, 400, 100, 50))  # Hit button
     hit_text_surface = get_font(30).render("Hit", True, "White")
@@ -273,11 +279,11 @@ def draw_game_state(player_stood, player_busted, dealer_busted):
     SCREEN.blit(stand_text_surface, (610, 510))
 
     # Draw game information
-    text_surface = get_font(45).render("Player Balance: $1000", True, "White")
+    text_surface = get_font(45).render("Player Balance: $"+str(player_balance), True, "White")
     SCREEN.blit(text_surface, (50, 40))
 
     # Display current bet amount
-    bet_text = get_font(30).render(f"Current Bet: ${current_bet}", True, "White")
+    bet_text = get_font(30).render(f"Current Bet: $"+str(bet), True, "White")
     SCREEN.blit(bet_text, (50, 100))
 
 
@@ -287,10 +293,10 @@ def display_result_message(result_message,result_colour):
     pygame.display.update()
 
 
-def play():
-    global current_bet, player_hand, dealer_hand  # Make necessary variables global
+def play(bet):
+    global player_balance, player_hand, dealer_hand  # Make necessary variables global
 
-    # Initialize player balance and bet amount
+    # Initialize player balance
     player_balance = 1000
 
     while True:
@@ -324,7 +330,7 @@ def play():
                             player_stood = True
 
             # Draw the game state
-            draw_game_state(player_stood, player_busted, dealer_busted)
+            draw_game_state(player_stood, player_busted)
             pygame.display.update()
 
         # Dealer's turn
@@ -338,16 +344,20 @@ def play():
                 player_value = calculate_hand_value(player_hand)
                 if player_value > dealer_value:
                     result_message = "Player wins!"
-                    result_colour = "White"
+                    result_colour = "Blue"
+                    player_balance += bet
                 elif player_value < dealer_value:
                     result_message = "Dealer wins!"
                     result_colour = "Red"
+                    player_balance -= bet
                 else:
-                    result_message = "Stand!"
+                    result_message = "Push!"
                     result_colour = "White"
                 # Display the result message
                 display_result_message(result_message, result_colour)
-
+        else:
+            player_balance -= bet
+            display_result_message("Player busted!", "Red")
         # Delay between rounds
         pygame.time.delay(1500)  # Adjust the delay time as needed
 
@@ -394,8 +404,10 @@ def options():
         pygame.display.update()
 
 
+
 def main_menu():
     while True:
+        global bet
         SCREEN.blit(BG, (0, 0))
 
         MENU_MOUSE_POS = pygame.mouse.get_pos()
@@ -403,16 +415,17 @@ def main_menu():
         MENU_TEXT = get_font(100).render("MAIN MENU", True, "#b68f40")
         MENU_RECT = MENU_TEXT.get_rect(center=(640, 100))
 
-        PLAY_BUTTON = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 250),
-                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        OPTIONS_BUTTON = Button(image=pygame.image.load("assets/Options Rect.png"), pos=(640, 400),
-                                text_input="OPTIONS", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 550),
-                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        # Create buttons for different bet amounts
+        BET_BUTTON_5 = Button(image=None, pos=(320, 250),
+                              text_input="5", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        BET_BUTTON_10 = Button(image=None, pos=(640, 250),
+                               text_input="10", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        BET_BUTTON_15 = Button(image=None, pos=(960, 250),
+                               text_input="15", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
 
         SCREEN.blit(MENU_TEXT, MENU_RECT)
 
-        for button in [PLAY_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
+        for button in [BET_BUTTON_5, BET_BUTTON_10, BET_BUTTON_15]:
             button.changeColor(MENU_MOUSE_POS)
             button.update(SCREEN)
 
@@ -421,15 +434,19 @@ def main_menu():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    play()  # Adjust the number of decks as needed
-                if OPTIONS_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    options()
-                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    pygame.quit()
-                    sys.exit()
+                # Check if the player clicked on any of the bet buttons
+                if BET_BUTTON_5.checkForInput(MENU_MOUSE_POS):
+                    bet = 5
+                    play(bet)
+                elif BET_BUTTON_10.checkForInput(MENU_MOUSE_POS):
+                    bet = 10
+                    play(bet)
+                elif BET_BUTTON_15.checkForInput(MENU_MOUSE_POS):
+                    bet = 15
+                    play(bet)
 
         pygame.display.update()
+
 
 
 if __name__ == "__main__":
