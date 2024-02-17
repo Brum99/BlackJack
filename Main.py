@@ -169,7 +169,7 @@ def deal_initial_cards():
     dealer_hand.extend(dealer_cards)
 
 
-def dealer_hit():
+def dealer_hit(player_doubled):
     global dealer_hand
     global player_balance
     global bet
@@ -199,7 +199,10 @@ def dealer_hit():
         # Display a message indicating dealer bust
         bust_message = get_font(30).render("Dealer Busts!", True, "Red")
         SCREEN.blit(bust_message, (50, 150))
-        player_balance += bet
+        if player_doubled:
+            player_balance += bet*2
+        else:
+            player_balance += bet
         pygame.display.update()
 
     return dealer_value
@@ -285,7 +288,11 @@ def draw_game_state(player_stood, player_busted, player_doubled):
     SCREEN.blit(text_surface, (50, 40))
 
     # Display current bet amount
-    bet_text = get_font(30).render(f"Current Bet: $"+str(bet), True, "White")
+    if player_doubled:
+        bet_text = get_font(30).render(f"Current Bet: $"+str(bet*2), True, "White")
+    else:
+        bet_text = get_font(30).render(f"Current Bet: $"+str(bet), True, "White")
+
     SCREEN.blit(bet_text, (50, 100))
 
 
@@ -311,7 +318,7 @@ def play(bet):
         SCREEN.fill("DarkGreen")
 
         # Event handling and game logic
-        while not player_stood and not player_busted:
+        while not player_stood and not player_busted and not player_doubled:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -335,15 +342,15 @@ def play(bet):
                                 # player_balance -= bet
                                 player_cards = random.sample(card_positions.keys(), 1)
                                 player_hand.extend(player_cards)
-                                player_stood = True
-                                player_doubled = True
+                                player_value = calculate_hand_value(player_hand)
+                                if player_value > 21:
+                                    player_busted = True
                                 # Display current bet amount
                                 bet_text = get_font(30).render(f"Current Bet: $" + str(bet), True, "DarkGreen")
                                 SCREEN.blit(bet_text, (50, 100))
-                                pygame.display.update()
                                 # bet_text = get_font(30).render(f"Current Bet: $" + str(bet*2), True, "White")
                                 # SCREEN.blit(bet_text, (50, 100))
-                                
+                                player_doubled = True
 
 
             # Draw the game state
@@ -352,7 +359,7 @@ def play(bet):
 
         # Dealer's turn
         if not player_busted:
-            dealer_value = dealer_hit()
+            dealer_value = dealer_hit(player_doubled)
             if dealer_value > 21:
                 dealer_busted = True
 
@@ -362,18 +369,28 @@ def play(bet):
                 if player_value > dealer_value:
                     result_message = "Player wins!"
                     result_colour = "Blue"
-                    player_balance += bet
+                    if player_doubled:
+                        player_balance += bet*2
+                    else:
+                        player_balance += bet
                 elif player_value < dealer_value:
                     result_message = "Dealer wins!"
                     result_colour = "Red"
-                    player_balance -= bet
+                    if player_doubled:
+                        player_balance -= bet*2
+                    else:
+                        player_balance -= bet
                 else:
                     result_message = "Push!"
                     result_colour = "White"
                 # Display the result message
                 display_result_message(result_message, result_colour)
         else:
-            player_balance -= bet
+            if player_doubled:
+                player_balance -= bet*2
+            else:
+                player_balance -= bet
+
             display_result_message("Player busted!", "Red")
         # Delay between rounds
         pygame.time.delay(1500)  # Adjust the delay time as needed
