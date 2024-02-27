@@ -314,6 +314,7 @@ def play(bet):
         player_busted = False  # Flag to track if the player has busted
         dealer_busted = False  # Flag to track if the dealer has busted
         player_doubled = False # Flag to trach if the player has doubled their hand
+        player_hit = False # Flag to track if the player has hit
         # Clear the screen
         SCREEN.fill("DarkGreen")
 
@@ -335,9 +336,11 @@ def play(bet):
                                 # Check if the player has busted
                                 if player_value > 21:
                                     player_busted = True
+                                # Set the player_hit flag to True
+                                player_hit = True
                             elif 600 < mouse_pos[0] < 700 and 500 < mouse_pos[1] < 550:
                                 player_stood = True
-                            elif 600 < mouse_pos[0] < 700 and 600 < mouse_pos[1] < 650:
+                            elif 600 < mouse_pos[0] < 700 and 600 < mouse_pos[1] < 650 and not player_hit:
                                 # Double down
                                 # player_balance -= bet
                                 player_cards = random.sample(card_positions.keys(), 1)
