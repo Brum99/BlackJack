@@ -270,18 +270,28 @@ def draw_game_state(player_stood, player_busted, player_doubled):
             else:
                 draw_card(SCREEN, card, (50 + i * 100, 300))
 
-    # Double down button
-    pygame.draw.rect(SCREEN, "DarkGreen", (600, 600, 100, 50))  # Double Down button
-    double_down_text_surface = get_font(30).render("Double Down", True, "White")
-    SCREEN.blit(double_down_text_surface, (600, 610))
-    # Draw buttons with updated text
-    pygame.draw.rect(SCREEN, "DarkGreen", (600, 400, 100, 50))  # Hit button
-    hit_text_surface = get_font(30).render("Hit", True, "White")
-    SCREEN.blit(hit_text_surface, (620, 410))
 
-    pygame.draw.rect(SCREEN, "DarkGreen", (600, 500, 100, 50))  # Stand button
+    # Draw buttons with updated text
+                
+    # Hit button
+    pygame.draw.rect(SCREEN, "DarkGreen", (620, 310, 100, 50))  # Hit button
+    hit_text_surface = get_font(30).render("Hit", True, "White")
+    SCREEN.blit(hit_text_surface, (620, 310))
+
+    # Stand Button
+    pygame.draw.rect(SCREEN, "DarkGreen", (620, 410, 100, 50))  # Stand button
     stand_text_surface = get_font(30).render("Stand", True, "White")
-    SCREEN.blit(stand_text_surface, (610, 510))
+    SCREEN.blit(stand_text_surface, (620, 410))
+
+    # Double down button
+    pygame.draw.rect(SCREEN, "DarkGreen", (620, 510, 100, 50))  # Double Down button
+    double_down_text_surface = get_font(30).render("Double Down", True, "White")
+    SCREEN.blit(double_down_text_surface, (620, 510))
+    
+    # Split button
+    pygame.draw.rect(SCREEN, "DarkGreen", (620, 610, 100, 50))  # Split button
+    split_text_surface = get_font(30).render("Split", True, "White")
+    SCREEN.blit(split_text_surface, (620, 610))
 
     # Draw game information
     text_surface = get_font(45).render("Player Balance: $"+str(player_balance), True, "White")
@@ -328,7 +338,8 @@ def play(bet):
                     # Handle player actions (hit or stand)
                     if not player_stood and not player_busted:
                             mouse_pos = pygame.mouse.get_pos()
-                            if 600 < mouse_pos[0] < 700 and 400 < mouse_pos[1] < 450:
+                            # Hitting
+                            if 620 < mouse_pos[0] < 720 and 310 < mouse_pos[1] < 360:
                                 # Deal another card to the player
                                 player_cards = random.sample(card_positions.keys(), 1)
                                 player_hand.extend(player_cards)
@@ -338,11 +349,12 @@ def play(bet):
                                     player_busted = True
                                 # Set the player_hit flag to True
                                 player_hit = True
-                            elif 600 < mouse_pos[0] < 700 and 500 < mouse_pos[1] < 550:
+                            # Standing
+                            
+                            elif 620 < mouse_pos[0] < 720 and 410 < mouse_pos[1] < 460:
                                 player_stood = True
-                            elif 600 < mouse_pos[0] < 700 and 600 < mouse_pos[1] < 650 and not player_hit:
-                                # Double down
-                                # player_balance -= bet
+                            # Double Down
+                            elif 620 < mouse_pos[0] < 720 and 510 < mouse_pos[1] < 560 and not player_hit:
                                 player_cards = random.sample(card_positions.keys(), 1)
                                 player_hand.extend(player_cards)
                                 player_value = calculate_hand_value(player_hand)
@@ -351,9 +363,11 @@ def play(bet):
                                 # Display current bet amount
                                 bet_text = get_font(30).render(f"Current Bet: $" + str(bet), True, "DarkGreen")
                                 SCREEN.blit(bet_text, (50, 100))
-                                # bet_text = get_font(30).render(f"Current Bet: $" + str(bet*2), True, "White")
-                                # SCREEN.blit(bet_text, (50, 100))
                                 player_doubled = True
+                            # Splitting
+                            elif 620 < mouse_pos[0] < 720 and 610 < mouse_pos[1] < 660:
+                                # Implement split functionality here
+                                pass  # Place, replace with actual split logic
 
 
             # Draw the game state
