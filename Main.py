@@ -246,6 +246,14 @@ def calculate_hand_value(hand):
 def draw_game_state(player_stood, player_busted, player_doubled):
     global player_balance
     global bet
+    global player_hand
+
+    # Check if the player has two cards of the same rank
+    split_available = False
+    if len(player_hand) == 2 and player_hand[0].split("_of_")[0] == player_hand[1].split("_of_")[0]:
+        split_available = True
+
+
     # Draw player title
     player_surface = get_font(45).render("Player", True, "White")
     SCREEN.blit(player_surface, (50, 450))
@@ -274,24 +282,28 @@ def draw_game_state(player_stood, player_busted, player_doubled):
     # Draw buttons with updated text
                 
     # Hit button
-    pygame.draw.rect(SCREEN, "DarkGreen", (620, 310, 100, 50))  # Hit button
+    pygame.draw.rect(SCREEN, "DarkGreen", (620, 210, 100, 50))  # Hit button
     hit_text_surface = get_font(30).render("Hit", True, "White")
-    SCREEN.blit(hit_text_surface, (620, 310))
+    SCREEN.blit(hit_text_surface, (620, 210))
 
     # Stand Button
-    pygame.draw.rect(SCREEN, "DarkGreen", (620, 410, 100, 50))  # Stand button
+    pygame.draw.rect(SCREEN, "DarkGreen", (620, 310, 100, 50))  # Stand button
     stand_text_surface = get_font(30).render("Stand", True, "White")
-    SCREEN.blit(stand_text_surface, (620, 410))
+    SCREEN.blit(stand_text_surface, (620, 310))
 
     # Double down button
-    pygame.draw.rect(SCREEN, "DarkGreen", (620, 510, 100, 50))  # Double Down button
+    pygame.draw.rect(SCREEN, "DarkGreen", (850, 210, 100, 50))  # Double Down button
     double_down_text_surface = get_font(30).render("Double Down", True, "White")
-    SCREEN.blit(double_down_text_surface, (620, 510))
+    SCREEN.blit(double_down_text_surface, (850, 210))
     
     # Split button
-    pygame.draw.rect(SCREEN, "DarkGreen", (620, 610, 100, 50))  # Split button
-    split_text_surface = get_font(30).render("Split", True, "White")
-    SCREEN.blit(split_text_surface, (620, 610))
+    pygame.draw.rect(SCREEN, "DarkGreen", (850, 310, 100, 50))
+    if split_available:
+        split_text_surface = get_font(30).render("Split", True, "Blue")  # Change color to blue if split is available
+    else:
+        split_text_surface = get_font(30).render("Split", True, "White")
+          # Otherwise, keep it white
+    SCREEN.blit(split_text_surface, (850, 310))
 
     # Draw game information
     text_surface = get_font(45).render("Player Balance: $"+str(player_balance), True, "White")
@@ -304,6 +316,8 @@ def draw_game_state(player_stood, player_busted, player_doubled):
         bet_text = get_font(30).render(f"Current Bet: $"+str(bet), True, "White")
 
     SCREEN.blit(bet_text, (50, 100))
+
+    pygame.display.update()
 
 
 def display_result_message(result_message,result_colour):
@@ -339,7 +353,7 @@ def play(bet):
                     if not player_stood and not player_busted:
                             mouse_pos = pygame.mouse.get_pos()
                             # Hitting
-                            if 620 < mouse_pos[0] < 720 and 310 < mouse_pos[1] < 360:
+                            if 620 < mouse_pos[0] < 720 and 210 < mouse_pos[1] < 260:
                                 # Deal another card to the player
                                 player_cards = random.sample(card_positions.keys(), 1)
                                 player_hand.extend(player_cards)
@@ -351,10 +365,10 @@ def play(bet):
                                 player_hit = True
                             # Standing
                             
-                            elif 620 < mouse_pos[0] < 720 and 410 < mouse_pos[1] < 460:
+                            elif 620 < mouse_pos[0] < 720 and 310 < mouse_pos[1] < 360:
                                 player_stood = True
                             # Double Down
-                            elif 620 < mouse_pos[0] < 720 and 510 < mouse_pos[1] < 560 and not player_hit:
+                            elif 850 < mouse_pos[0] < 950 and 210 < mouse_pos[1] < 260 and not player_hit:
                                 player_cards = random.sample(card_positions.keys(), 1)
                                 player_hand.extend(player_cards)
                                 player_value = calculate_hand_value(player_hand)
@@ -365,7 +379,7 @@ def play(bet):
                                 SCREEN.blit(bet_text, (50, 100))
                                 player_doubled = True
                             # Splitting
-                            elif 620 < mouse_pos[0] < 720 and 610 < mouse_pos[1] < 660:
+                            elif 850 < mouse_pos[0] < 850 and 310 < mouse_pos[1] < 360:
                                 # Implement split functionality here
                                 pass  # Place, replace with actual split logic
 
@@ -416,6 +430,19 @@ def play(bet):
         reset_game()
         pygame.display.update()
 
+def split_hand():
+    global player_hand
+    # Check if the player's hand is eligible for splitting
+    if len(player_hand) == 2 and player_hand[0].split("_of_")[0] == player_hand[1].split("_of_")[0]:
+        # Split the player's hand into two separate hands
+        hand1 = [player_hand[0]]
+        hand2 = [player_hand[1]]
+        # Deal an additional card to each hand
+        hand1.append(random.choice([card for card in card_positions.keys() if card != "card_back"]))
+        hand2.append(random.choice([card for card in card_positions.keys() if card != "card_back"]))
+        # Update player_hand with the split hands
+        player_hand = [hand1, hand2]
+        
 def reset_game():
     # Reset player and dealer hands
     player_hand.clear()
