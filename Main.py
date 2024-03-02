@@ -1,7 +1,6 @@
 import pygame
 import sys
 from button import Button
-from Game import Game  # Uncomment this line to import the Game class
 import random
 
 pygame.init()
@@ -380,9 +379,7 @@ def play(bet):
                                 player_doubled = True
                             # Splitting
                             elif 850 < mouse_pos[0] < 850 and 310 < mouse_pos[1] < 360:
-                                # Implement split functionality here
-                                pass  # Place, replace with actual split logic
-
+                                split_hand
 
             # Draw the game state
             draw_game_state(player_stood, player_busted, player_doubled)
